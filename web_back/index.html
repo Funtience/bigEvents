@@ -155,6 +155,20 @@
                     }
                 })
             })
+
+            // 发送ajax请求更改个人信息
+            $.ajax({
+                type: 'get',
+                url: 'http://localhost:8000/admin/getuser',
+                success: function(backData){
+                    // 渲染左边的个人信息
+                    $('.user_info img').attr('src',backData.data.user_pic)
+                    $('.user_info span').html('欢迎&nbsp;&nbsp;'+backData.data.nickname)
+
+                    // 渲染右边的个人信息
+                    $('.user_center_link img').attr('src',backData.data.user_pic)
+                }
+            })
         })
     </script>
 
