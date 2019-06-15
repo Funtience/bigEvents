@@ -36,29 +36,32 @@
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">邮箱：</label>
                     <div class="col-sm-4">
-                        <input type="text" name="email" class="form-control email" id="inputEmail3" value="lisisi@126.com">
+                        <input type="text" name="email" class="form-control email" id="inputEmail3"
+                            value="lisisi@126.com">
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
                     <div class="col-sm-10">
                         <img src="images/2.jpg" alt="" class="user_pic"><br>
                         <!-- 用一个图片来美化上传按钮,通过label绑定隐藏的按钮 -->
-                        <label for="exampleInputFile"><img src="./images/upload_logo.png" alt="" class="upload" style="width: 30px;height: 25px"></label>
+                        <label for="exampleInputFile"><img src="./images/upload_logo.png" alt="" class="upload"
+                                style="width: 30px;height: 25px"></label>
                         <!-- 隐藏按钮 -->
                         <input type="file" style="opacity: 0" name="user_pic" id="exampleInputFile">
                     </div>
                 </div>
 
                 <div class="form-group">
-                        <label for="inputEmail3" class="col-sm-2 control-label">密码：</label>
-                        <div class="col-sm-4">
-                            <input type="password" name="password" class="form-control password" id="inputEmail3" value="12345678">
-                        </div>
+                    <label for="inputEmail3" class="col-sm-2 control-label">密码：</label>
+                    <div class="col-sm-4">
+                        <input type="password" name="password" class="form-control password" id="inputEmail3"
+                            value="12345678">
                     </div>
-               
-    
+                </div>
+
+
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
                         <button type="submit" class="btn btn-success">修改</button>
@@ -69,36 +72,37 @@
     </div>
 
     <script>
-        $(function(){
+        $(function () {
             // 发起ajax请求,获得具体个人信息
             $.ajax({
-                type:'get',
+                type: 'get',
                 url: 'http://localhost:8000/admin/userinfo_get',
-                success: function(backData) {
+                success: function (backData) {
                     // $('input.username').val(backData.data.username)
                     // $('input.nickname').val(backData.data.nickname)
                     // $('input.password').val(backData.data.password)
                     // $('input.email').val(backData.data.email)
 
-                    for(var key in backData.data) {
-                        $('input.'+key).val(backData.data[key])
+                    for (var key in backData.data) {
+                        $('input.' + key).val(backData.data[key])
                     }
 
-                    $('img.user_pic').attr('src',backData.data.user_pic)
+                    $('img.user_pic').attr('src', backData.data.user_pic)
                 }
             })
 
             // 图片预览功能
-            $('#exampleInputFile').on('change',function(){
+            $('#exampleInputFile').on('change', function () {
+                // console.dir(this)
                 var icon = this.files[0]
                 var url = URL.createObjectURL(icon)
 
-                $('.user_pic').attr('src',url)
+                $('.user_pic').attr('src', url)
             })
 
 
             // 修改标签的点击事件
-            $('.btn-success').on('click',function(e) {
+            $('.btn-success').on('click', function (e) {
                 // 阻止submit的默认跳转行为
                 e.preventDefault();
 
@@ -106,15 +110,29 @@
 
                 // 发送ajax请求
                 $.ajax({
-                    type:'post',
-                    url:'http://localhost:8000/admin/userinfo_edit',
+                    type: 'post',
+                    url: 'http://localhost:8000/admin/userinfo_edit',
                     data: formData,
                     contentType: false, // 告诉后台不要请求头
                     processData: false, // 告诉后台不要进行字符串拼接
-                    success: function(backData) {
+                    success: function (backData) {
                         console.log(backData)
-                        if(backData.code == 200) {
+                        if (backData.code == 200) {
                             console.log('修改成功了')
+
+                            // 发送ajax请求更改个人信息
+                            $.ajax({
+                                type: 'get',
+                                url: 'http://localhost:8000/admin/getuser',
+                                success: function (backData) {
+                                    // 渲染左边的个人信息
+                                    parent.$('.user_info img').attr('src', backData.data.user_pic)
+                                    parent.$('.user_info span').html('欢迎&nbsp;&nbsp;' + backData.data.nickname)
+
+                                    // 渲染右边的个人信息
+                                    parent.$('.user_center_link img').attr('src', backData.data.user_pic)
+                                }
+                            })
                         }
                     }
                 })
