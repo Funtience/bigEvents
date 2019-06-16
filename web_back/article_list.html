@@ -13,6 +13,8 @@
     <script src="js/jquery-1.12.4.min.js"></script>
     <!-- 引入模板引擎 -->
     <script src="./js/template-web.js"></script>
+    <!-- 引入分页插件 -->
+    <script src="./js/jquery.twbsPagination.js"></script>
 </head>
 
 <body>
@@ -237,13 +239,33 @@
                 }
             })
 
-            // 筛选按钮的点击事件
-            $('#btnSearch').on('click',function() {
+            // 用一个变量保存总页数
+            var myTotalPage = 10;
+
+            var $pagination = $('.pagination');
+            var defaultOpts = {
+                totalPages: myTotalPage,
+                visiblePages: 7,
+                first: '首页',
+                prev: '上一页',
+                next: '下一页',
+                last: '尾页',
+                onPageClick: function (event, page) {
+                    // 点击分页发送 ajax 请求
+                    getArticle(page, true)
+                    console.log(page)
+                }
+            };
+            $pagination.twbsPagination(defaultOpts);
+
+
+            // 封装获取文章的 ajax 方法
+            function getArticle(pageNum, flag) {
                 // 获取分类和状态的值
                 var type = $('#selCategory').val()
                 var state = $('#selStatus').val()
 
-                console.log('type:'+type+'state:'+state);
+                // console.log('type:' + type + 'state:' + state);
 
                 // 发送 ajax 请求
                 $.ajax({
@@ -253,22 +275,49 @@
                         key: '',
                         type: type,
                         state: state,
-                        page: 1,
+                        page: pageNum,
                         perpage: 5
                     },
-                    success: function(backData) {
-                        if(backData.code == 200) {
+                    success: function (backData) {
+                        // console.log(myState)
+                        // console.log(myType)
+                        if (backData.code == 200) {
                             // 调用模板引擎的方法
-                            var resHtml = template('tmp_artList',backData)
+                            var resHtml = template('tmp_artList', backData)
                             $('tbody').html(resHtml)
+
+                            var totalPages = backData.totalPage;
+
+                            // myTotalPage = backData.totalPage
+
+                            if (myTotalPage != totalPages) {
+                                myTotalPage = totalPages
+
+                                var currentPage = 1;
+                                $pagination.twbsPagination('destroy');
+                                $pagination.twbsPagination($.extend({}, defaultOpts, {
+                                    startPage: currentPage,
+                                    totalPages: totalPages
+                                }));
+
+                            }
                         }
-                        console.log(backData)
+                        // console.log(backData)
                     }
                 })
+            }
+
+            // 筛选按钮的点击事件
+            $('#btnSearch').on('click', function () {
+                getArticle(1, false)
+                $('.prev').next().trigger('click') // 每次点击筛选按钮的时候都触发一下第一页的按钮
             })
 
             // 页面一加载就渲染一次文章列表
             $('#btnSearch').trigger('click')
+
+
+
         })
     </script>
 
