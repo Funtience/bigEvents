@@ -209,7 +209,7 @@
             <td class="text-center">{{ $value.state }}</td>
             <td class="text-center">
                 <a href="article_edit.html" data-id="{{$value.id }}" class="btn btn-default btn-xs">编辑</a>
-                <a href="javascript:void(0);" data-id="{{$value.id }}" class="btn btn-danger btn-xs">删除</a>
+                <a href="javascript:void(0);" data-id="{{$value.id }}" class="btn btn-danger btn-xs btn-delete">删除</a>
             </td>
         </tr>
        {{ /each }}
@@ -316,7 +316,29 @@
             // 页面一加载就渲染一次文章列表
             $('#btnSearch').trigger('click')
 
+            // 文章列表的删除事件
+            $('tbody').on('click','a.btn-delete',function() {
 
+                // 获取当前要删除的文章的 id
+                var id = $(this).attr('data-id')
+
+                // 发送 ajax 请求删除对应的文章
+                $.ajax({
+                    url: 'http://localhost:8000/admin/article_delete',
+                    data: {
+                        id:id
+                    },
+                    success: function(backData) {
+                        console.log(backData)
+                    }
+                })
+
+                // 重新渲染页面
+                $('#btnSearch').trigger('click')
+            })
+
+
+            
 
         })
     </script>
