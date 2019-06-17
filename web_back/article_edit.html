@@ -15,6 +15,8 @@
     <script src="js/jedate/js/jedate.js"></script>
     <script src="js/tinymce/js/tinymce/tinymce.min.js"></script>
     <script src="js/tinymce/js/tinymce_setup.js"></script>
+    <!-- 引入模板引擎 -->
+    <script src="./js/template-web.js"></script>
 </head>
 
 <body>
@@ -25,22 +27,22 @@
         <div class="container-fluid common_con">
             <form class="form-horizontal article_form">
                 <div class="form-group">
-                    <label for="inputEmail3" class="col-sm-2 control-label">文章标题：</label>
+                    <label for="article_title" class="col-sm-2 control-label">文章标题：</label>
                     <div class="col-sm-10">
-                        <input type="email" class="form-control" id="inputEmail3" value="文章标题文字">
+                        <input type="text" class="form-control" id="article_title" name="title" value="文章标题文字">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputPassword3" class="col-sm-2 control-label">文章封面：</label>
                     <div class="col-sm-10">
-                        <img src="images/pic06.jpg" class="article_cover">
-                        <input type="file" id="exampleInputFile">
+                        <img src="images/pic06.jpg" class="article_cover" id="article_cover">
+                        <input type="file" id="exampleInputFile" name="cover">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="inputEmail3" class="col-sm-2 control-label">文章类别：</label>
+                    <label for="article_type" class="col-sm-2 control-label">文章类别：</label>
                     <div class="col-sm-4">
-                        <select class="form-control">
+                        <select class="form-control" id="article_type" name="type">
                             <option>类别一</option>
                             <option>类别二</option>
                             <option>类别三</option>
@@ -50,11 +52,11 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="inputEmail3" class="col-sm-2 control-label">发布时间：</label>
+                    <label for="article_date" class="col-sm-2 control-label">发布时间：</label>
                     <div class="col-sm-4">
 
                         <div class="input-group">
-                            <input type="text" class="form-control" value="2019-05-17" id="dateinput">
+                            <input type="text" class="form-control" value="2019-05-17" id="article_date" name="date">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" type="button"
                                     onclick="jeDate('#dateinput',{trigger:false,format: 'YYYY-MM-DD'})"><i
@@ -64,20 +66,103 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="inputEmail3" class="col-sm-2 control-label">文章内容：</label>
+                    <label for="rich_content" class="col-sm-2 control-label">文章内容：</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="rich_content" name="content" placeholder="文章内容" value="文章内容">
+                            <textarea class="form-control article_content" id="rich_content" placeholder="文章内容">
+                                    文章内容
+                            </textarea>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
-                        <button type="submit" class="btn btn-success">修改</button>
+                        <button type="submit" class="btn btn-success btn-edit">修改</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
+    <script id="tmp_article_category" type="text/html">
+        {{ each data}}
+        <option value="{{ $value.id }}">{{ $value.name }}</option>
+        {{ /each }}
+    </script>
+    <script>
+        $(function () {
+
+            // 根据 id 发送 ajax 请求, 获取文章有关信息
+            var id = window.location.search.split('=')[1]
+            console.log(id)
+            $.ajax({
+                url: 'http://localhost:8000/admin/search',
+                data: {
+                    id: id
+                },
+                success: function (backData) {
+                    console.log(backData)
+
+                    $('#article_title').val(backData.data.title)
+                    // $('#article_type').val(backData.data.type)
+                    $('.article_cover').attr('src',backData.data.cover)
+                    $('#article_date').val(backData.data.date)
+                    $('.article_content').html(backData.data.content)
+                }
+            })
+
+             // 用模板渲染 分类 框
+             $.ajax({
+                type: 'get',
+                url: 'http://localhost:8000/admin/category_search',
+                success: function (backData) {
+                    // 调用模板引擎的方法
+                    console.log(backData)
+                    var resHtml = template('tmp_article_category', backData)
+                    $('#article_type').html(resHtml)
+                }
+            })
+
+
+           // 图片的预览事件 
+            $('#exampleInputFile').on('change',function() {
+                var icon = this.files[0]
+                var url = URL.createObjectURL(icon)
+
+                $('#article_cover').attr('src',url)
+            })
+
+            // 修改按钮的点击事件
+            $('.btn-edit').on('click',function(e) {
+                // 阻止 submit 的跳转事件
+                e.preventDefault()
+
+                // var formData = new FormData($('form.article_form')[0])
+                // formData.append('id',id)
+                // formData.append('content',tinyMCE.activeEditor.getContent())
+
+                var title = $('[name=title]').val()
+                var type = $('[name=type]').val()
+                var date= $('[name=date]').val()
+                var cover = $('#exampleInputFile')[0].files[0]
+
+                // 发送 ajax 请求
+                $.ajax({
+                    type: 'post',
+                    url: 'http://localhost:8000/admin/article_edit',
+                    data: {
+                        id: id,
+                        title: title,
+                        cover: cover,
+                        type: type,
+                        date: date,
+                        content: tinyMCE.activeEditor.getContent()
+                    },
+                    success: function(backData) {
+                        console.log(backData)
+                    }
+                })
+            })
+        })
+    </script>
 </body>
 
 </html>
